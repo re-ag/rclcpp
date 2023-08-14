@@ -36,13 +36,17 @@
 #include "rclcpp/node_interfaces/node_time_source.hpp"
 #include "rclcpp/node_interfaces/node_timers.hpp"
 #include "rclcpp/node_interfaces/node_topics.hpp"
-#include "rclcpp/node_interfaces/node_type_descriptions.hpp"
 #include "rclcpp/node_interfaces/node_waitables.hpp"
 #include "rclcpp/qos_overriding_options.hpp"
 
 #include "rmw/validate_namespace.h"
 
 #include "./detail/resolve_parameter_overrides.hpp"
+
+//
+// Timing Coordination Library
+//
+#include "rclcpp/tcl_node_interfaces/node_timing.hpp"
 
 using rclcpp::Node;
 using rclcpp::NodeOptions;
@@ -110,22 +114,6 @@ create_effective_namespace(const std::string & node_namespace, const std::string
 
 }  // namespace
 
-/// Internal implementation to provide hidden and API/ABI stable changes to the Node.
-/**
- * This class is intended to be an "escape hatch" within a stable distribution, so that certain
- * smaller features and bugfixes can be backported, having a place to put new members, while
- * maintaining the ABI.
- *
- * This is not intended to be a parking place for new features, it should be used for backports
- * only, left empty and unallocated in Rolling.
- */
-class Node::NodeImpl
-{
-public:
-  NodeImpl() = default;
-  ~NodeImpl() = default;
-};
-
 Node::Node(
   const std::string & node_name,
   const NodeOptions & options)
@@ -184,7 +172,7 @@ Node::Node(
       options.use_intra_process_comms(),
       options.enable_topic_statistics())),
   node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
-  node_logging_(new rclcpp::node_interfaces::NodeLogging(node_base_)),
+  node_logging_(new rclcpp::node_interfaces::NodeLogging(node_base_.get())),
   node_timers_(new rclcpp::node_interfaces::NodeTimers(node_base_.get())),
   node_topics_(new rclcpp::node_interfaces::NodeTopics(node_base_.get(), node_timers_.get())),
   node_services_(new rclcpp::node_interfaces::NodeServices(node_base_.get())),
@@ -193,8 +181,7 @@ Node::Node(
       node_topics_,
       node_graph_,
       node_services_,
-      node_logging_,
-      options.clock_type()
+      node_logging_
     )),
   node_parameters_(new rclcpp::node_interfaces::NodeParameters(
       node_base_,
@@ -223,17 +210,18 @@ Node::Node(
       options.clock_qos(),
       options.use_clock_thread()
     )),
-  node_type_descriptions_(new rclcpp::node_interfaces::NodeTypeDescriptions(
-      node_base_,
-      node_logging_,
-      node_parameters_,
-      node_services_
-    )),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
   node_options_(options),
+  node_timing_(new rclcpp::tcl_node_interfaces::NodeTiming(
+    node_base_,
+    node_parameters_,
+    node_topics_,
+    node_options_)),
   sub_namespace_(""),
   effective_namespace_(create_effective_namespace(this->get_namespace(), sub_namespace_))
 {
+  // std::cout << "Node(1)" << " node name is " <<  node_name << std::endl;
+  
   // we have got what we wanted directly from the overrides,
   // but declare the parameters anyway so they are visible.
   rclcpp::detail::declare_qos_parameters(
@@ -248,10 +236,6 @@ Node::Node(
     node_topics_->resolve_topic_name("/parameter_events"),
     options.parameter_event_qos(),
     rclcpp::detail::PublisherQosParametersTraits{});
-
-  if (options.enable_logger_service()) {
-    node_logging_->create_logger_services(node_services_);
-  }
 }
 
 Node::Node(
@@ -269,8 +253,7 @@ Node::Node(
   node_waitables_(other.node_waitables_),
   node_options_(other.node_options_),
   sub_namespace_(extend_sub_namespace(other.get_sub_namespace(), sub_namespace)),
-  effective_namespace_(create_effective_namespace(other.get_namespace(), sub_namespace_)),
-  hidden_impl_(other.hidden_impl_)
+  effective_namespace_(create_effective_namespace(other.get_namespace(), sub_namespace_))
 {
   // Validate new effective namespace.
   int validation_result;
@@ -382,7 +365,7 @@ Node::has_parameter(const std::string & name) const
 rcl_interfaces::msg::SetParametersResult
 Node::set_parameter(const rclcpp::Parameter & parameter)
 {
-  return node_parameters_->set_parameters_atomically({parameter});
+  return this->set_parameters_atomically({parameter});
 }
 
 std::vector<rcl_interfaces::msg::SetParametersResult>
@@ -447,40 +430,16 @@ Node::list_parameters(const std::vector<std::string> & prefixes, uint64_t depth)
   return node_parameters_->list_parameters(prefixes, depth);
 }
 
-rclcpp::Node::PreSetParametersCallbackHandle::SharedPtr
-Node::add_pre_set_parameters_callback(PreSetParametersCallbackType callback)
-{
-  return node_parameters_->add_pre_set_parameters_callback(callback);
-}
-
 rclcpp::Node::OnSetParametersCallbackHandle::SharedPtr
-Node::add_on_set_parameters_callback(OnSetParametersCallbackType callback)
+Node::add_on_set_parameters_callback(OnParametersSetCallbackType callback)
 {
   return node_parameters_->add_on_set_parameters_callback(callback);
 }
 
-rclcpp::Node::PostSetParametersCallbackHandle::SharedPtr
-Node::add_post_set_parameters_callback(PostSetParametersCallbackType callback)
-{
-  return node_parameters_->add_post_set_parameters_callback(callback);
-}
-
 void
-Node::remove_pre_set_parameters_callback(const PreSetParametersCallbackHandle * const handler)
+Node::remove_on_set_parameters_callback(const OnSetParametersCallbackHandle * const callback)
 {
-  node_parameters_->remove_pre_set_parameters_callback(handler);
-}
-
-void
-Node::remove_on_set_parameters_callback(const OnSetParametersCallbackHandle * const handler)
-{
-  node_parameters_->remove_on_set_parameters_callback(handler);
-}
-
-void
-Node::remove_post_set_parameters_callback(const PostSetParametersCallbackHandle * const handler)
-{
-  node_parameters_->remove_post_set_parameters_callback(handler);
+  return node_parameters_->remove_on_set_parameters_callback(callback);
 }
 
 std::vector<std::string>
@@ -615,12 +574,6 @@ Node::get_node_topics_interface()
   return node_topics_;
 }
 
-rclcpp::node_interfaces::NodeTypeDescriptionsInterface::SharedPtr
-Node::get_node_type_descriptions_interface()
-{
-  return node_type_descriptions_;
-}
-
 rclcpp::node_interfaces::NodeServicesInterface::SharedPtr
 Node::get_node_services_interface()
 {
@@ -637,6 +590,12 @@ rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr
 Node::get_node_waitables_interface()
 {
   return node_waitables_;
+}
+
+rclcpp::tcl_node_interfaces::NodeTimingInterface::SharedPtr
+Node::get_node_timing_interface()
+{
+  return node_timing_;
 }
 
 const std::string &
@@ -656,6 +615,7 @@ Node::create_sub_node(const std::string & sub_namespace)
 {
   // Cannot use make_shared<Node>() here as it requires the constructor to be
   // public, and this constructor is intentionally protected instead.
+  // std::cout << "create_sub_node" << std::endl;
   return std::shared_ptr<Node>(new Node(*this, sub_namespace));
 }
 
@@ -663,4 +623,31 @@ const NodeOptions &
 Node::get_node_options() const
 {
   return this->node_options_;
+}
+
+void
+Node::create_timing_header()
+{
+  if(this->node_timing_)
+    this->node_timing_->create_timing_header();
+}
+
+void
+Node::create_timing_headers()
+{
+  if(this->node_timing_)
+    this->node_timing_->create_timing_headers();
+}
+
+void
+Node::propagate_timing_info()
+{
+  if(this->node_timing_)
+    this->node_timing_->propagate_timing_info();
+}
+
+tcl_std_msgs::msg::TimingHeader::SharedPtr 
+Node::get_timing_header()
+{
+  return this->node_timing_->get_timing_header();
 }

@@ -15,21 +15,6 @@
 #include "rclcpp/executors.hpp"
 
 void
-rclcpp::spin_all(
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-  std::chrono::nanoseconds max_duration)
-{
-  rclcpp::executors::SingleThreadedExecutor exec;
-  exec.spin_node_all(node_ptr, max_duration);
-}
-
-void
-rclcpp::spin_all(rclcpp::Node::SharedPtr node_ptr, std::chrono::nanoseconds max_duration)
-{
-  rclcpp::spin_all(node_ptr->get_node_base_interface(), max_duration);
-}
-
-void
 rclcpp::spin_some(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr)
 {
   rclcpp::executors::SingleThreadedExecutor exec;
@@ -54,5 +39,11 @@ rclcpp::spin(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr)
 void
 rclcpp::spin(rclcpp::Node::SharedPtr node_ptr)
 {
-  rclcpp::spin(node_ptr->get_node_base_interface());
+  // rclcpp::spin(node_ptr->get_node_base_interface());
+  // Timing Coordination Library
+  rclcpp::executors::SingleThreadedExecutor exec;
+  exec.add_node(node_ptr->get_node_base_interface());
+  exec.add_node_timing_interface(node_ptr->get_node_timing_interface());
+  exec.spin();
+  exec.remove_node(node_ptr);
 }

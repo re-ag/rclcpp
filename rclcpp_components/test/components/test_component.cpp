@@ -51,6 +51,12 @@ public:
     return node_.get_node_base_interface();
   }
 
+  rclcpp::tcl_node_interfaces::NodeTimingInterface::SharedPtr
+  get_node_timing_interface()
+  {
+    return node_.get_node_timing_interface();
+  }
+  
 private:
   rclcpp::Node node_;
 };
