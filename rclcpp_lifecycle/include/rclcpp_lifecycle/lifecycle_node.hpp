@@ -91,7 +91,6 @@
 
 #include "rclcpp/tcl_node_interfaces/node_timing_interface.hpp"
 
-
 namespace rclcpp_lifecycle
 {
 
@@ -990,6 +989,7 @@ private:
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr node_time_source_;
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr node_waitables_;
   rclcpp::tcl_node_interfaces::NodeTimingInterface::SharedPtr node_timing_;
+
 
   const rclcpp::NodeOptions node_options_;
 

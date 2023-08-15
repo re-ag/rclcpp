@@ -2,6 +2,34 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+16.0.5 (2023-07-17)
+-------------------
+* warning: comparison of integer expressions of different signedness (`#2219 <https://github.com/ros2/rclcpp/issues/2219>`_) (`#2223 <https://github.com/ros2/rclcpp/issues/2223>`_)
+* Trigger the intraprocess guard condition with data (`#2164 <https://github.com/ros2/rclcpp/issues/2164>`_) (`#2167 <https://github.com/ros2/rclcpp/issues/2167>`_)
+* Implement validity checks for rclcpp::Clock (`#2040 <https://github.com/ros2/rclcpp/issues/2040>`_) (`#2210 <https://github.com/ros2/rclcpp/issues/2210>`_)
+* Contributors: Tomoya Fujita, mergify[bot]
+
+16.0.4 (2023-04-25)
+-------------------
+* use allocator via init_options argument. (`#2129 <https://github.com/ros2/rclcpp/issues/2129>`_) (`#2131 <https://github.com/ros2/rclcpp/issues/2131>`_)
+* Contributors: mergify[bot]
+
+16.0.3 (2023-01-10)
+-------------------
+* Fix SharedFuture from async_send_request never becomes valid (`#2044 <https://github.com/ros2/rclcpp/issues/2044>`_) (`#2076 <https://github.com/ros2/rclcpp/issues/2076>`_)
+* do not throw exception if trying to dequeue an empty intra-process buffer (`#2061 <https://github.com/ros2/rclcpp/issues/2061>`_) (`#2070 <https://github.com/ros2/rclcpp/issues/2070>`_)
+* fix nullptr dereference in prune_requests_older_than (`#2008 <https://github.com/ros2/rclcpp/issues/2008>`_) (`#2065 <https://github.com/ros2/rclcpp/issues/2065>`_)
+* Fix bug that a callback not reached (`#1640 <https://github.com/ros2/rclcpp/issues/1640>`_) (`#2033 <https://github.com/ros2/rclcpp/issues/2033>`_)
+* Contributors: mergify[bot]
+
+16.0.2 (2022-11-07)
+-------------------
+* fix mismatched issue if using zero_allocate (`#1995 <https://github.com/ros2/rclcpp/issues/1995>`_) (`#2026 <https://github.com/ros2/rclcpp/issues/2026>`_)
+* use regex for wildcard matching (backport `#1839 <https://github.com/ros2/rclcpp/issues/1839>`_) (`#1986 <https://github.com/ros2/rclcpp/issues/1986>`_)
+* Drop wrong template specialization (`#1926 <https://github.com/ros2/rclcpp/issues/1926>`_) (`#1937 <https://github.com/ros2/rclcpp/issues/1937>`_)
+* Add statistics for handle_loaned_message (`#1927 <https://github.com/ros2/rclcpp/issues/1927>`_) (`#1932 <https://github.com/ros2/rclcpp/issues/1932>`_)
+* Contributors: mergify[bot]
+
 16.0.1 (2022-04-13)
 -------------------
 * remove DEFINE_CONTENT_FILTER cmake option (`#1914 <https://github.com/ros2/rclcpp/issues/1914>`_)

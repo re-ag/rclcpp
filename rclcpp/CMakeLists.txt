@@ -20,7 +20,6 @@ find_package(rosidl_typesupport_c REQUIRED)
 find_package(rosidl_typesupport_cpp REQUIRED)
 find_package(statistics_msgs REQUIRED)
 find_package(tracetools REQUIRED)
-
 find_package(tcl_std_msgs REQUIRED)
 
 # TODO(wjwwood): remove this when gtest can build on its own, when using target_compile_features()
@@ -74,7 +73,6 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/message_info.cpp
   src/rclcpp/network_flow_endpoint.cpp
   src/rclcpp/node.cpp
-  include/rclcpp/node_impl.hpp
   src/rclcpp/node_interfaces/node_base.cpp
   src/rclcpp/node_interfaces/node_clock.cpp
   src/rclcpp/node_interfaces/node_graph.cpp
@@ -112,9 +110,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/wait_set_policies/detail/write_preferring_read_write_lock.cpp
   src/rclcpp/waitable.cpp
 
-  #
-  #Timing Coordination Library
-  #
+  # Timing Coordination Library
   src/rclcpp/tcl_node_interfaces/node_release_timer.cpp
   src/rclcpp/tcl_node_interfaces/node_timing.cpp
   src/rclcpp/tcl_node_interfaces/node_profile.cpp

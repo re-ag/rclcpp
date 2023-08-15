@@ -94,7 +94,7 @@ NodeParameters::NodeParameters(
     global_args = &(context_ptr->global_arguments);
   }
   combined_name_ = node_base->get_fully_qualified_name();
-  // std::cout << "combined_name_" << combined_name_ << std::endl;
+
   parameter_overrides_ = rclcpp::detail::resolve_parameter_overrides(
     combined_name_, parameter_overrides, &options->arguments, global_args);
 

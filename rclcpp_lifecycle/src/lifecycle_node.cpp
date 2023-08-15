@@ -43,6 +43,7 @@
 #include "lifecycle_node_interface_impl.hpp"  // implementation
 #include "rclcpp/tcl_node_interfaces/node_timing.hpp"
 
+
 namespace rclcpp_lifecycle
 {
 
@@ -113,7 +114,7 @@ LifecycleNode::LifecycleNode(
     node_options_)),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
   node_options_(options),
-  impl_(new LifecycleNodeInterfaceImpl(node_base_, node_services_))
+  impl_(new LifecycleNodeInterfaceImpl(node_base_, node_services_, node_logging_))
 {
   impl_->init(enable_communication_interface);
 
